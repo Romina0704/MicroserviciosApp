@@ -1,1 +1,43 @@
+name: Deploy to Azure VM
 
+on:
+  push:
+    branches:
+      - master  # Ajustado para tu rama master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Azure VM via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.AZURE_VM_IP }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          # El script que se ejecutará dentro de tu VM
+          script: |
+            cd /home/azureuser/
+            
+            # 1. Detener los contenedores actuales para liberar recursos
+            docker-compose down
+            
+            # 2. Actualizar el código de Clientes
+            cd /home/azureuser/MicroserviciosApp
+            git checkout master || git checkout main
+            git pull origin master || git pull origin main
+            
+            # 3. Actualizar el código de Pedidos
+            cd /home/azureuser/Microservicio
+            git checkout master || git checkout main
+            git pull origin master || git pull origin main
+            
+            # 4. Volver a la raíz y levantar todo con los nuevos cambios
+            cd /home/azureuser/
+            docker-compose up -d --build
+            
+            # 5. Limpieza de imágenes huérfanas para no llenar el disco de la VM
+            docker image prune -f
