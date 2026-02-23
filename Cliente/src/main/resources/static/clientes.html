@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0f0e0d;
+            --paper: #f5f0e8;
+            --cream: #ede8dc;
+            --gold: #c9a84c;
+            --gold-light: #e8d49a;
+            --rust: #b05c2f;
+            --sage: #4a6741;
+            --shadow: rgba(15,14,13,0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            min-height: 100vh;
+            color: var(--ink);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Decorative background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                    radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                    radial-gradient(ellipse at 80% 80%, rgba(74,103,65,0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: flex-end;
+            gap: 24px;
+            margin-bottom: 52px;
+            padding-bottom: 32px;
+            border-bottom: 2px solid var(--ink);
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .header-badge {
+            width: 56px;
+            height: 56px;
+            background: var(--ink);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .header-badge svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--gold);
+        }
+
+        .header-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .header-text p {
+            font-size: 0.85rem;
+            color: #6b6560;
+            margin-top: 6px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-count {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .header-count .num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .header-count .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8a8078;
+        }
+
+        /* ── Layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        /* ── Form Card ── */
+        .form-card {
+            background: var(--ink);
+            border-radius: 12px;
+            padding: 36px;
+            position: sticky;
+            top: 32px;
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .form-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--paper);
+            margin-bottom: 6px;
+        }
+
+        .form-card p.subtitle {
+            font-size: 0.8rem;
+            color: #8a8078;
+            margin-bottom: 28px;
+            letter-spacing: 0.3px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, var(--gold), transparent);
+            margin-bottom: 28px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--gold-light);
+            margin-bottom: 7px;
+            font-weight: 500;
+        }
+
+        .field input {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 11px 14px;
+            color: var(--paper);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
+        }
+
+        .field input::placeholder { color: rgba(245,240,232,0.25); }
+
+        .field input:focus {
+            border-color: var(--gold);
+            background: rgba(201,168,76,0.08);
+        }
+
+        .field input.error {
+            border-color: var(--rust);
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .btn-save {
+            width: 100%;
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            border-radius: 6px;
+            padding: 13px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save:hover { background: #d9b85c; }
+        .btn-save:active { transform: scale(0.98); }
+
+        .btn-save svg {
+            width: 16px; height: 16px;
+            fill: var(--ink);
+            flex-shrink: 0;
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: var(--sage);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Table Section ── */
+        .table-section {
+            animation: fadeUp 0.5s ease 0.1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .table-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #ddd8ce;
+            border-radius: 6px;
+            padding: 8px 14px;
+            gap: 8px;
+        }
+
+        .search-box svg {
+            width: 15px; height: 15px;
+            fill: #aaa;
+            flex-shrink: 0;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            background: transparent;
+            color: var(--ink);
+            width: 180px;
+        }
+
+        .table-wrap {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e8e2d6;
+            box-shadow: 0 4px 24px var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: var(--cream);
+            padding: 13px 16px;
+            text-align: left;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            color: #6b6560;
+            border-bottom: 1px solid #ddd8ce;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0ebe0;
+            transition: background 0.15s;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #faf7f0; }
+
+        tbody td {
+            padding: 13px 16px;
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .id-badge {
+            display: inline-block;
+            background: var(--cream);
+            color: #6b6560;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .name-cell {
+            font-weight: 500;
+        }
+
+        .email-cell {
+            color: #6b6560;
+            font-size: 0.82rem;
+        }
+
+        .btn-del {
+            background: none;
+            border: 1px solid #e0d5c5;
+            color: #b05c2f;
+            border-radius: 5px;
+            padding: 5px 12px;
+            font-size: 0.78rem;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .btn-del:hover {
+            background: var(--rust);
+            color: white;
+            border-color: var(--rust);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa49a;
+        }
+
+        .empty-state svg {
+            width: 48px; height: 48px;
+            fill: #ddd8ce;
+            margin-bottom: 14px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 860px) {
+            .layout { grid-template-columns: 1fr; }
+            .form-card { position: static; }
+            .header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-badge">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div class="header-text">
+            <h1>Gestión de Clientes</h1>
+            <p>Registro y administración · Sistema CRM</p>
+        </div>
+        <div class="header-count">
+            <div class="num" id="total-count">0</div>
+            <div class="label">Clientes</div>
+        </div>
+    </div>
+
+    <div class="layout">
+
+        <!-- Form -->
+        <div class="form-card">
+            <h2>Nuevo Cliente</h2>
+            <p class="subtitle">Complete los datos del registro</p>
+            <div class="divider"></div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label>Cédula</label>
+                    <input id="cedula" placeholder="0000000000">
+                </div>
+                <div class="field">
+                    <label>Teléfono</label>
+                    <input id="telefono" placeholder="09xxxxxxxx">
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label>Nombre</label>
+                    <input id="nombre" placeholder="Juan">
+                </div>
+                <div class="field">
+                    <label>Apellido</label>
+                    <input id="apellido" placeholder="Pérez">
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Correo electrónico</label>
+                <input id="email" type="email" placeholder="correo@ejemplo.com">
+            </div>
+
+            <div class="field">
+                <label>Dirección</label>
+                <input id="direccion" placeholder="Calle, ciudad">
+            </div>
+
+            <button class="btn-save" onclick="guardar()">
+                <svg viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z"/></svg>
+                Guardar Cliente
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>Clientes Registrados</h2>
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input id="search" placeholder="Buscar cliente..." oninput="filtrar()">
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cédula</th>
+                        <th>Nombre completo</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let todosLosClientes = [];
+
+    function showToast(msg, color = '#4a6741') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = color;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function cargar() {
+        fetch("/clientes")
+            .then(r => r.json())
+            .then(data => {
+                todosLosClientes = data;
+                document.getElementById('total-count').textContent = data.length;
+                renderTabla(data);
+            });
+    }
+
+    function renderTabla(data) {
+        const tbody = document.getElementById("tabla");
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg>
+                    <p>No hay clientes registrados aún</p>
+                </div>
+            </td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td><span class="id-badge">${c.id}</span></td>
+                <td>${c.cedula}</td>
+                <td class="name-cell">${c.nombre} ${c.apellido}</td>
+                <td class="email-cell">${c.email}</td>
+                <td>${c.telefono}</td>
+                <td>${c.direccion}</td>
+                <td><button class="btn-del" onclick="eliminar(${c.id})">Eliminar</button></td>
+            </tr>`).join('');
+    }
+
+    function filtrar() {
+        const q = document.getElementById('search').value.toLowerCase();
+        const filtrado = todosLosClientes.filter(c =>
+            (c.nombre + c.apellido + c.cedula + c.email).toLowerCase().includes(q)
+        );
+        renderTabla(filtrado);
+    }
+
+    function guardar() {
+        const campos = ['cedula','nombre','apellido','email','telefono','direccion'];
+        const datos = {};
+        let valido = true;
+
+        campos.forEach(id => {
+            const el = document.getElementById(id);
+            datos[id] = el.value.trim();
+            el.classList.remove('error');
+            if (!datos[id] && ['cedula','nombre','apellido'].includes(id)) {
+                el.classList.add('error');
+                valido = false;
+            }
+        });
+
+        if (!valido) { showToast('Completa los campos obligatorios', '#b05c2f'); return; }
+
+        fetch("/clientes", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(datos)
+        }).then(r => {
+            if (!r.ok) throw new Error();
+            campos.forEach(id => document.getElementById(id).value = '');
+            showToast('✓ Cliente guardado correctamente');
+            cargar();
+        }).catch(() => showToast('Error al guardar el cliente', '#b05c2f'));
+    }
+
+    function eliminar(id) {
+        if (!confirm("¿Deseas eliminar este cliente?")) return;
+        fetch(`/clientes/${id}`, { method: "DELETE" })
+            .then(() => { showToast('Cliente eliminado', '#6b6560'); cargar(); });
+    }
+
+    cargar();
+</script>
+</body>
+</html>
