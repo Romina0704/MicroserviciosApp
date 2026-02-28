@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-
-  mysql-cliente:
-    image: mysql:8.0
-    container_name: mysql-cliente
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: cliente
-    ports:
-      - "3309:3306"
-    networks:
-      - micro-net
-
-  cliente:
-    build: ./Cliente
-    container_name: cliente
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql-cliente
-    networks:
-      - micro-net
-
   mysql-pedidos:
     image: mysql:8.0
     container_name: mysql-pedidos
@@ -39,9 +17,7 @@ services:
     container_name: pedidos
     ports:
       - "8081:8080"
-    depends_on:
-      - cliente
-      - mysql-pedidos
+
     networks:
       - micro-net
 
